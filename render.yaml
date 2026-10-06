@@ -3,7 +3,7 @@ services:
     name: employee-task-dashboard
     runtime: node
     plan: free
-    region: oregon
+    region: frankfurt
     branch: main
     # NODE_ENV=production makes npm skip devDependencies, but the build needs
     # typescript, vite and prisma from there, so dev deps are forced on.
