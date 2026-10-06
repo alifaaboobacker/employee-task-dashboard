@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: employee-task-dashboard
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    # NODE_ENV=production makes npm skip devDependencies, but the build needs
+    # typescript, vite and prisma from there, so dev deps are forced on.
+    buildCommand: >-
+      npm --prefix client ci --include=dev &&
+      npm --prefix client run build &&
+      npm --prefix server ci --include=dev &&
+      npm --prefix server run build &&
+      npm --prefix server run prisma:deploy
+    startCommand: npm --prefix server start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_SECRET
+        generateValue: true
+      # Set in the Render dashboard: the Neon connection string, and the
+      # service's own https URL once Render has assigned it.
+      - key: DATABASE_URL
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false

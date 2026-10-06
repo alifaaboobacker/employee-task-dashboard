@@ -158,7 +158,8 @@ npm run build     # outputs static files to client/dist
 npm run preview   # optional local check of the built output
 ```
 
-Serve `client/dist` from any static host or CDN, and point it at the API.
+When `NODE_ENV=production` the API also serves `client/dist` itself, so one origin
+answers both the web app and `/api`. Build the client before starting the server.
 
 Change these settings for a production deployment:
 
@@ -173,6 +174,27 @@ Change these settings for a production deployment:
 
 Because the session cookie is `SameSite=Strict`, serve the web app and the API from the same
 site in production (for example `console.company.com` and `console.company.com/api`).
+
+### Free deployment (Render + Neon)
+
+`render.yaml` in the project root deploys the whole app as a single Render web service on the
+free plan. Use **Neon** for Postgres, not Render's free database, which is deleted 30 days
+after it is created.
+
+1. Create a Neon project and copy its pooled connection string.
+2. Run the migrations and seed once from your machine, with `DATABASE_URL` in `server/.env`
+   pointing at Neon: `npm run prisma:deploy && npm run seed`. Render's free plan has no shell,
+   so this is the only chance to seed.
+3. On Render, create a Blueprint from this repository. It reads `render.yaml` and prompts for
+   `DATABASE_URL` and `CLIENT_ORIGIN`, and generates `JWT_SECRET` itself.
+4. Set `CLIENT_ORIGIN` to the service's own `https://<name>.onrender.com` URL once Render
+   assigns it, then redeploy.
+
+Keep `npm run seed` out of the build command: it upserts the admin and would reset that
+password to `ADMIN_PASSWORD` on every deploy.
+
+Free-tier behaviour: the service sleeps after 15 minutes idle and takes about a minute to wake,
+and Neon's compute also scales to zero, so the first request after a quiet period is slow.
 
 ---
 

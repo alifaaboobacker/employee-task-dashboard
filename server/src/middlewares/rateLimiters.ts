@@ -8,6 +8,9 @@ const handlerPayload = (message: string) => ({
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 600,
+  // Platform health checks poll constantly and would otherwise share the
+  // window with real traffic from the same proxy address.
+  skip: (req) => req.path === '/health',
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: handlerPayload('Too many requests, please try again later'),
